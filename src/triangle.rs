@@ -17,11 +17,13 @@ pub struct Triangle {
 }
 
 impl Triangle {
-    pub fn new(a: Vec3A, b: Vec3A, c: Vec3A) -> Self {
-        let p: [Vec3A; 3] = [a, b, c];
+    pub fn from_array(p: [Vec3A; 3]) -> Self {
         let normal = (p[1] - p[0]).cross(p[2] - p[1]);
         // we don't have information about neighbouring triangles, so set all normals to the same value
         let n: [Vec3A; 3] = [normal; 3];
         return Triangle { p, n };
+    }
+    pub fn new(a: Vec3A, b: Vec3A, c: Vec3A) -> Self {
+        return Self::from_array([a, b, c]);
     }
 }

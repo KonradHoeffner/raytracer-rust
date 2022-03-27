@@ -1,7 +1,8 @@
 use crate::triangle::Triangle;
+use core::f32::{INFINITY, NEG_INFINITY};
 use glam::f32::Vec3A;
+use std::iter::Iterator;
 use std::vec::Vec;
-
 //import SchnittEreignis;
 const SPLIT_TRIANGLES_MIN: i8 = 4;
 
@@ -22,6 +23,24 @@ impl BoundingBox {
         return BoundingBox {
             min: Vec3A::new(0.0, 0.0, 0.0),
             max: Vec3A::new(0.0, 0.0, 0.0),
+            triangles: Vec::new(),
+            children: Vec::new(),
+        };
+    }
+
+    // Spannt eine Bounding Box um eine Menge von Dreiecken auf
+    pub fn around(triangles: &mut dyn Iterator<Item = Triangle>) -> BoundingBox {
+        let mut min = Vec3A::new(INFINITY, INFINITY, INFINITY);
+        let mut max = Vec3A::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY);
+        for triangle in triangles {
+            for point in triangle.p {
+                min = min.min(point);
+                max = max.max(point);
+            }
+        }
+        return BoundingBox {
+            min,
+            max,
             triangles: Vec::new(),
             children: Vec::new(),
         };
