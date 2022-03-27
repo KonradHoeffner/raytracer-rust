@@ -1,3 +1,4 @@
+mod bounding_box;
 mod triangle;
 
 fn main() {

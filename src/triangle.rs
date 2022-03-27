@@ -11,9 +11,9 @@ fn test() {
 }
 
 #[derive(Debug)]
-struct Triangle {
-    p: [Vec3A; 3],
-    n: [Vec3A; 3],
+pub struct Triangle {
+    pub p: [Vec3A; 3],
+    pub n: [Vec3A; 3],
 }
 
 impl Triangle {
