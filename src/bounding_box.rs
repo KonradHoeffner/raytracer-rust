@@ -6,6 +6,20 @@ use std::vec::Vec;
 //import SchnittEreignis;
 const SPLIT_TRIANGLES_MIN: i8 = 4;
 
+#[test]
+fn testAround() {
+    let b = BoundingBox::around(
+        &mut vec![Triangle::new(
+            Vec3A::new(1.0, 2.0, 3.0),
+            Vec3A::new(-5.0, -7.0, 3.0),
+            Vec3A::new(0.5, 4.0, 1.0),
+        )]
+        .into_iter(),
+    );
+    assert_eq!(b.min, Vec3A::new(-5.0, -7.0, 1.0));
+    assert_eq!(b.max, Vec3A::new(1.0, 4.0, 3.0));
+}
+
 #[derive(Default)]
 struct BoundingBox {
     //distance: f32,
@@ -19,17 +33,17 @@ struct BoundingBox {
 }
 
 impl BoundingBox {
-    pub fn new() -> BoundingBox {
-        return BoundingBox {
+    pub fn new() -> Self {
+        Self {
             min: Vec3A::new(0.0, 0.0, 0.0),
             max: Vec3A::new(0.0, 0.0, 0.0),
             triangles: Vec::new(),
             children: Vec::new(),
-        };
+        }
     }
 
     // Spannt eine Bounding Box um eine Menge von Dreiecken auf
-    pub fn around(triangles: &mut dyn Iterator<Item = Triangle>) -> BoundingBox {
+    pub fn around(triangles: &mut dyn Iterator<Item = Triangle>) -> Self {
         let mut min = Vec3A::new(INFINITY, INFINITY, INFINITY);
         let mut max = Vec3A::new(NEG_INFINITY, NEG_INFINITY, NEG_INFINITY);
         for triangle in triangles {
@@ -38,11 +52,11 @@ impl BoundingBox {
                 max = max.max(point);
             }
         }
-        return BoundingBox {
+        Self {
             min,
             max,
             triangles: Vec::new(),
             children: Vec::new(),
-        };
+        }
     }
 }

@@ -1,13 +1,17 @@
 use glam::f32::Vec3A;
 
 #[test]
-fn test() {
+fn testNormal() {
     let t = Triangle::new(
         Vec3A::new(-1.0, 0.0, 0.0),
         Vec3A::new(1.0, 0.0, 0.0),
         Vec3A::new(0.0, 1.0, 0.0),
     );
     println!("{:?}", t);
+    let normal = t.n[0];
+    assert!(normal.x == 0.0);
+    assert!(normal.y == 0.0);
+    assert!(normal.z != 0.0);
 }
 
 #[derive(Debug)]
