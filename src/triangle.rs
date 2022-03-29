@@ -25,9 +25,12 @@ impl Triangle {
         let normal = (p[1] - p[0]).cross(p[2] - p[1]);
         // we don't have information about neighbouring triangles, so set all normals to the same value
         let n: [Vec3A; 3] = [normal; 3];
-        return Triangle { p, n };
+        Triangle { p, n }
+    }
+    pub fn with_normals(p: [Vec3A; 3], n: [Vec3A; 3]) -> Self {
+        Self { p, n }
     }
     pub fn new(a: Vec3A, b: Vec3A, c: Vec3A) -> Self {
-        return Self::from_array([a, b, c]);
+        Self::from_array([a, b, c])
     }
 }
