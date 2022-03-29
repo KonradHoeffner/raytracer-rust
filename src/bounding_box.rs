@@ -21,7 +21,7 @@ fn testAround() {
 }
 
 #[derive(Default)]
-struct BoundingBox {
+pub struct BoundingBox {
     //distance: f32,
     //unterteilung: i32,
     // min enthält die minimalen - , max die maximalen x,y und z - Werte für die eine Mitgliedschaft in der Box gilt

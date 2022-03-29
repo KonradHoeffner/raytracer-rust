@@ -2,7 +2,7 @@
 
 use glam::f32::Vec3A;
 
-struct Camera {
+pub struct Camera {
     // Alles was näher an der Kamera ist wird geclippt
     clippingNear: f32,
     // Alles was weiter weg von der Kamera ist wird geclippt
@@ -20,7 +20,7 @@ struct Camera {
 }
 
 impl Camera {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             clippingNear: 0.01,
             clippingFar: 1000.0,
