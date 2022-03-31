@@ -1,9 +1,9 @@
 use crate::color::Color;
 use glam::f32::Vec3A;
 
-struct LightSource {
-    pos: Vec3A,
-    color: Color,
+pub struct LightSource {
+    pub pos: Vec3A,
+    pub color: Color,
 }
 
 impl LightSource {

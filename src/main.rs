@@ -3,6 +3,7 @@ mod triangle;
 mod light_source;
 mod camera;
 mod color;
+mod material;
 mod scene;
 mod file_import;
 

@@ -20,12 +20,12 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new() -> Self {
+    pub fn new(pos: Vec3A, target: Vec3A) -> Self {
         Self {
             clippingNear: 0.01,
             clippingFar: 1000.0,
-            pos: Vec3A::new(0.0, 0.0, 5.0),
-            target: Vec3A::new(0.0, 0.0, 0.0),
+            pos,
+            target,
             up: Vec3A::new(0.0, 1.0, 0.0),
         }
     }
