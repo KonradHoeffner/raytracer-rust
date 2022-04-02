@@ -134,12 +134,13 @@ fn parseScene(xml: &str) -> Option<Scene> {
         .attribute("src")?;
     let txml = fs::read_to_string(triangulationSrc).ok()?;
     let (materials, triangles) = parseTriangulation(&txml).unwrap();
-    let camera = parseCamera(&e.children().find(|e| e.has_tag_name("camera"))?);
-    let background = parseColor(&e.children().find(|e| e.has_tag_name("hintergrundfarbe"))?);
+    let camera = parseCamera(&e.children().find(|e| e.has_tag_name("camera"))?)?;
+    let beleuchtung = &e.children().find(|e| e.has_tag_name("beleuchtung"))?;
+    let background = parseColor(&beleuchtung.children().find(|e| e.has_tag_name("hintergrundfarbe"))?)?;
     let ambient = parseColor(
-        &e.children()
+        &beleuchtung.children()
             .find(|e| e.has_tag_name("ambientehelligkeit"))?,
-    );
+    )?;
     Some(Scene {
         materials,
         triangles,
