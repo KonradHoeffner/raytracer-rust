@@ -8,4 +8,4 @@ edition = "2021"
 [dependencies]
 glam = "0.16.0"
 roxmltree = "0.14.1"
-anyhow = "1.0.0"
+anyhow = {version = "1.0.0", features = ["backtrace"] }
