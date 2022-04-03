@@ -9,13 +9,19 @@ use roxmltree::{Document, Node};
 use std::collections::HashMap;
 use std::fs;
 use std::vec::Vec;
+use std::error::Error;
+use std::fmt;
 
-fn fatt(ele: &Node, att: &str) -> Option<f32> {
-    ele.attribute(att)?.parse::<f32>().ok()
+fn fatt(ele: &Node, att: &str) -> Result<f32,anyhow::Error> {
+    ele.attribute(att).ok_or(anyhow!("Missing float attribute: {}",att))?.parse::<f32>()?;
 }
 
-fn parseVector3(e: &Node) -> Option<Vec3A> {
-    Some(Vec3A::new(fatt(e, "x")?, fatt(e, "y")?, fatt(e, "z")?))
+fn satt(ele: &Node, att: &str) -> Result<String,anyhow::Error> {
+    ele.attribute(att).ok_or(anyhow!("Missing string attribute: {}",att));
+}
+
+fn parseVector3(e: &Node) -> Result<Vec3A,anyhow::Error> {
+    Ok(Vec3A::new(fatt(e, "x")?, fatt(e, "y")?, fatt(e, "z")?))
 }
 #[test]
 fn testGetVector3dFromElement() {
@@ -24,29 +30,29 @@ fn testGetVector3dFromElement() {
     assert_eq!(v, Vec3A::new(-0.7, 1.4, 0.38));
 }
 
-fn parseColor(e: &Node) -> Option<Color> {
-    Some(Color::new(
+fn parseColor(e: &Node) -> Result<Color,anyhow::Error> {
+    Ok(Color::new(
         fatt(e, "r")?,
         fatt(e, "g")?,
         fatt(e, "b")?,
         fatt(e, "a").unwrap_or(1.0),
     ))
 }
-
-fn itArray(it: &mut dyn Iterator<Item = Node>) -> Option<[Vec3A; 3]> {
+/*
+fn itArray(it: &mut dyn Iterator<Item = Node>) -> Result<[Vec3A; 3],anyhow::Error> {
     let mut elements = it.filter(|x| x.is_element());
-    Some([
+    Ok([
         parseVector3(&elements.next()?)?,
         parseVector3(&elements.next()?)?,
         parseVector3(&elements.next()?)?,
     ])
 }
-
-fn parseTriangle(e: &Node) -> Option<Triangle> {
+*/
+fn parseTriangle(e: &Node) -> Result<Triangle,anyhow::Error> {
     let mut it = e.children();
     let p = itArray(&mut it).unwrap();
     let n = itArray(&mut it).unwrap();
-    Some(Triangle::with_normals(p, n))
+    Ok(Triangle::with_normals(p, n))
 }
 #[test]
 fn testParseTriangle() {
@@ -64,21 +70,21 @@ fn testParseTriangle() {
     assert_eq!(t.n[0], Vec3A::new(-0.4, 4.4, 0.4));
 }
 
-fn parseTriangulation(xml: &str) -> Option<(HashMap<String, Material>, Vec<Triangle>)> {
-    let doc = Document::parse(xml).ok()?;
+fn parseTriangulation(xml: &str) -> Result<(HashMap<String, Material>, Vec<Triangle>),anyhow::Error> {
+    let doc = Document::parse(xml)?;
     let e = doc.root_element();
     let matEles = e.children().filter(|e| e.has_tag_name("material"));
     let mut materials: HashMap<String, Material> = HashMap::new();
     for m in matEles {
-        let ambient = parseColor(&m.children().find(|e| e.has_tag_name("ambient"))?)?;
-        let diffus = parseColor(&m.children().find(|e| e.has_tag_name("diffus"))?)?;
-        let spiegelnd = parseColor(&m.children().find(|e| e.has_tag_name("spiegelnd"))?)?;
-        let name = m.attribute("name")?;
+        let ambient = parseColor(childNode(&m,"ambient")?)?;
+        let diffus = parseColor(childNode(&m,"diffus")?)?;
+        let spiegelnd = parseColor(childNode(&m,"spiegelnd")?)?;
+        let name = satt(&m,"name")?;
         materials.insert(
             name.to_string(),
             Material {
                 name: name.to_string(),
-                glanz: m.attribute("glanzwert")?.parse::<f32>().ok()?,
+                glanz: fatt(&m,"glanzwert")?,
                 ambient,
                 diffus,
                 spiegelnd,
@@ -90,7 +96,7 @@ fn parseTriangulation(xml: &str) -> Option<(HashMap<String, Material>, Vec<Trian
     for te in triangleEles {
         triangles.push(parseTriangle(&te)?);
     }
-    Some((materials, triangles))
+    Ok((materials, triangles))
 }
 #[test]
 fn testParseTriangulation() {
@@ -113,35 +119,36 @@ z="0.78"/>
     assert_eq!(triangles[0].p[0], Vec3A::new(-1.71, 1.18, 0.38));
 }
 
-fn parseCamera(e: &Node) -> Option<Camera> {
-    let pos = parseVector3(&e.children().find(|e| e.has_tag_name("position"))?)?;
-    let target = parseVector3(&e.children().find(|e| e.has_tag_name("target"))?)?;
-    Some(Camera::new(pos, target))
+fn childNode<'a>(e: &'a Node, tagName: &'static str) -> Result<&'a Node<'a, 'a>, anyhow::Error>
+{
+    &e.children().find(|e| e.has_tag_name("position")).ok_or(anyhow!("Element has no child element {}",tagName))
 }
 
-fn parseLightsource(e: &Node) -> Option<LightSource> {
-    let pos = parseVector3(&e.children().find(|e| e.has_tag_name("position"))?)?;
-    let color = parseColor(&e.children().find(|e| e.has_tag_name("farbe"))?)?;
-    Some(LightSource { pos, color })
+fn parseCamera(e: &Node) -> Result<Camera,anyhow::Error> {
+    let pos = parseVector3(childNode(&e,"position")?)?;
+    let target = parseVector3(childNode(&e,"target")?)?;
+    Ok(Camera::new(pos, target))
 }
 
-fn parseScene(xml: &str) -> Option<Scene> {
-    let doc = Document::parse(xml).ok()?;
+fn parseLightsource(e: &Node) -> Result<LightSource,anyhow::Error> {
+    let pos = parseVector3(childNode(&e,"position")?)?;
+    let color = parseColor(childNode(&e,"farbe")?)?;
+    Ok(LightSource { pos, color })
+}
+
+fn parseScene(xml: &str) -> Result<Scene,anyhow::Error> {
+    let doc = Document::parse(xml)?;
     let e = doc.root_element();
-    let triangulationSrc = e
-        .children()
-        .find(|e| e.has_tag_name("triangulation"))?
-        .attribute("src")?;
-    let txml = fs::read_to_string(triangulationSrc).ok()?;
+    let triangulationSrc = satt(childNode(&e,"triangulation")?,"src")?;
+    let txml = fs::read_to_string(triangulationSrc)?;
     let (materials, triangles) = parseTriangulation(&txml).unwrap();
-    let camera = parseCamera(&e.children().find(|e| e.has_tag_name("camera"))?)?;
-    let beleuchtung = &e.children().find(|e| e.has_tag_name("beleuchtung"))?;
-    let background = parseColor(&beleuchtung.children().find(|e| e.has_tag_name("hintergrundfarbe"))?)?;
+    let camera = parseCamera(childNode(&e,"camera")?)?;
+    let beleuchtung = childNode(&e,"beleuchtung")?;
+    let background = parseColor(childNode(&beleuchtung,"hintergrundfarbe")?)?;
     let ambient = parseColor(
-        &beleuchtung.children()
-            .find(|e| e.has_tag_name("ambientehelligkeit"))?,
+        childNode(&beleuchtung,"ambientehelligkeit")?,
     )?;
-    Some(Scene {
+    Ok(Scene {
         materials,
         triangles,
         background,
