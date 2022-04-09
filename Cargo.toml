@@ -9,3 +9,7 @@ edition = "2021"
 glam = "0.16.0"
 roxmltree = "0.14.1"
 anyhow = {version = "1.0.0", features = ["backtrace"] }
+# https://rust-tutorials.github.io/learn-opengl/basics/000-creating-a-window.html
+bytemuck = "1"
+ogl33 = { version = "0.2.0", features = ["debug_error_checks"]}
+beryllium = "0.3.0"

@@ -10,24 +10,31 @@ use std::collections::HashMap;
 use std::fs;
 use std::vec::Vec;
 
-
 use anyhow::anyhow;
 
-macro_rules! childNode{
- ($e:expr,$t:expr)=>{
-    $e.children().find(|e| e.has_tag_name($t)).ok_or(anyhow!("Element has no child element {}",$t))
- }
+macro_rules! childNode {
+    ($e:expr,$t:expr) => {
+        $e.children()
+            .find(|e| e.has_tag_name($t))
+            .ok_or(anyhow!("Element has no child element {}", $t))
+    };
 }
 
-fn fatt(ele: &Node, att: &str) -> Result<f32,anyhow::Error> {
-    Ok(ele.attribute(att).ok_or(anyhow!("Missing float attribute: {}",att))?.parse::<f32>()?)
+fn fatt(ele: &Node, att: &str) -> Result<f32, anyhow::Error> {
+    Ok(ele
+        .attribute(att)
+        .ok_or(anyhow!("Missing float attribute: {}", att))?
+        .parse::<f32>()?)
 }
 
-fn satt(ele: &Node, att: &str) -> Result<String,anyhow::Error> {
-    Ok(ele.attribute(att).ok_or(anyhow!("Missing string attribute: {}",att))?.to_string())
+fn satt(ele: &Node, att: &str) -> Result<String, anyhow::Error> {
+    Ok(ele
+        .attribute(att)
+        .ok_or(anyhow!("Missing string attribute: {}", att))?
+        .to_string())
 }
 
-fn parse_vector3(e: &Node) -> Result<Vec3A,anyhow::Error> {
+fn parse_vector3(e: &Node) -> Result<Vec3A, anyhow::Error> {
     Ok(Vec3A::new(fatt(e, "x")?, fatt(e, "y")?, fatt(e, "z")?))
 }
 #[test]
@@ -37,7 +44,7 @@ fn test_get_vector3d_from_element() {
     assert_eq!(v, Vec3A::new(-0.7, 1.4, 0.38));
 }
 
-fn parse_color(e: &Node) -> Result<Color,anyhow::Error> {
+fn parse_color(e: &Node) -> Result<Color, anyhow::Error> {
     Ok(Color::new(
         fatt(e, "r")?,
         fatt(e, "g")?,
@@ -55,9 +62,17 @@ fn itArray(it: &mut dyn Iterator<Item = Node>) -> Result<[Vec3A; 3],anyhow::Erro
     ])
 }
 */
-fn parse_triangle(e: &Node) -> Result<Triangle,anyhow::Error> {
-    let p = [parse_vector3(&childNode!(&e,"punkt1")?)?,parse_vector3(&childNode!(&e,"punkt2")?)?,parse_vector3(&childNode!(&e,"punkt3")?)?];
-    let n = [parse_vector3(&childNode!(&e,"normale1")?)?,parse_vector3(&childNode!(&e,"normale2")?)?,parse_vector3(&childNode!(&e,"normale3")?)?];
+fn parse_triangle(e: &Node) -> Result<Triangle, anyhow::Error> {
+    let p = [
+        parse_vector3(&childNode!(&e, "punkt1")?)?,
+        parse_vector3(&childNode!(&e, "punkt2")?)?,
+        parse_vector3(&childNode!(&e, "punkt3")?)?,
+    ];
+    let n = [
+        parse_vector3(&childNode!(&e, "normale1")?)?,
+        parse_vector3(&childNode!(&e, "normale2")?)?,
+        parse_vector3(&childNode!(&e, "normale3")?)?,
+    ];
     Ok(Triangle::with_normals(p, n))
 }
 #[test]
@@ -76,21 +91,23 @@ fn test_parse_triangle() {
     assert_eq!(t.n[0], Vec3A::new(-0.4, 4.4, 0.4));
 }
 
-fn parse_triangulation(xml: &str) -> Result<(HashMap<String, Material>, Vec<Triangle>),anyhow::Error> {
+fn parse_triangulation(
+    xml: &str,
+) -> Result<(HashMap<String, Material>, Vec<Triangle>), anyhow::Error> {
     let doc = Document::parse(xml)?;
     let e = doc.root_element();
     let matEles = e.children().filter(|e| e.has_tag_name("material"));
     let mut materials: HashMap<String, Material> = HashMap::new();
     for m in matEles {
-        let ambient = parse_color(&childNode!(&m,"ambient")?)?;
-        let diffus = parse_color(&childNode!(&m,"diffus")?)?;
-        let spiegelnd = parse_color(&childNode!(&m,"spiegelnd")?)?;
-        let name = satt(&m,"name")?;
+        let ambient = parse_color(&childNode!(&m, "ambient")?)?;
+        let diffus = parse_color(&childNode!(&m, "diffus")?)?;
+        let spiegelnd = parse_color(&childNode!(&m, "spiegelnd")?)?;
+        let name = satt(&m, "name")?;
         materials.insert(
             name.to_string(),
             Material {
                 name: name.to_string(),
-                glanz: fatt(&m,"glanzwert")?,
+                glanz: fatt(&m, "glanzwert")?,
                 ambient,
                 diffus,
                 spiegelnd,
@@ -125,44 +142,39 @@ z="0.78"/>
     assert_eq!(triangles[0].p[0], Vec3A::new(-1.71, 1.18, 0.38));
 }
 
-
-
 /*
 fn childNode<'a>(e: &'a Node, tagName: &'static str) -> Result<&'a Node<'a, 'a>, anyhow::Error>
 {
     Ok(&e.children().find(|e| e.has_tag_name("position")).ok_or(anyhow!("Element has no child element {}",tagName))?)
 }
 */
-fn parse_camera(e: &Node) -> Result<Camera,anyhow::Error> {
-    let pos = parse_vector3(&childNode!(&e,"position")?)?;
-    let target = parse_vector3(&childNode!(&e,"ziel")?)?;
+fn parse_camera(e: &Node) -> Result<Camera, anyhow::Error> {
+    let pos = parse_vector3(&childNode!(&e, "position")?)?;
+    let target = parse_vector3(&childNode!(&e, "ziel")?)?;
     Ok(Camera::new(pos, target))
 }
 
-fn parse_lightsource(e: &Node) -> Result<LightSource,anyhow::Error> {
-    let pos = parse_vector3(&childNode!(&e,"position")?)?;
-    let color = parse_color(&childNode!(&e,"farbe")?)?;
+fn parse_lightsource(e: &Node) -> Result<LightSource, anyhow::Error> {
+    let pos = parse_vector3(&childNode!(&e, "position")?)?;
+    let color = parse_color(&childNode!(&e, "farbe")?)?;
     Ok(LightSource { pos, color })
 }
 
-fn parse_scene(xml: &str) -> Result<Scene,anyhow::Error> {
+pub fn parse_scene(xml: &str) -> Result<Scene, anyhow::Error> {
     let doc = Document::parse(xml).expect("Parsing XML");
     let e = doc.root_element();
-    let triangulation_src = "scene/".to_owned()+&satt(&childNode!(&e,"triangulation")?,"src")?;
+    let triangulation_src = "scene/".to_owned() + &satt(&childNode!(&e, "triangulation")?, "src")?;
     let txml = fs::read_to_string(triangulation_src)?;
     let (materials, triangles) = parse_triangulation(&txml).unwrap();
-    let camera = parse_camera(&childNode!(&e,"kamera")?)?;
-    let beleuchtung = &childNode!(&e,"beleuchtung")?;
-    let background = parse_color(&childNode!(&beleuchtung,"hintergrundfarbe")?)?;
-    let ambient = parse_color(
-        &childNode!(&beleuchtung,"ambientehelligkeit")?,
-    )?;
+    let camera = parse_camera(&childNode!(&e, "kamera")?)?;
+    let beleuchtung = &childNode!(&e, "beleuchtung")?;
+    let background = parse_color(&childNode!(&beleuchtung, "hintergrundfarbe")?)?;
+    let ambient = parse_color(&childNode!(&beleuchtung, "ambientehelligkeit")?)?;
     Ok(Scene {
         materials,
         triangles,
         background,
         ambient,
-        
     })
 }
 /*<?xml version="1.0" encoding="UTF-8"?>
