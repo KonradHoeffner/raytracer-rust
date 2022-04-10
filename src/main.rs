@@ -20,11 +20,6 @@ use std::fs;
 use crate::learn::*;
 use beryllium::*;
 
-/*
-let xml = fs::read_to_string("scene/abgabeszene.xml").unwrap();
-let scene = parse_scene(&xml);
-*/
-
 const WINDOW_TITLE: &str = "Raytracer";
 
 use beryllium::*;
@@ -36,7 +31,7 @@ use ogl33::*;
 
 type Vertex = [f32; 3];
 
-const VERTICES: [Vertex; 3] = [[-0.5, -0.5, 0.0], [0.5, -0.5, 0.0], [0.0, 0.5, 0.0]];
+//const VERTICES: [Vertex; 3] = [[-0.5, -0.5, 0.0], [0.5, -0.5, 0.0], [0.0, 0.5, 0.0]];
 
 const VERT_SHADER: &str = r#"#version 330 core
   layout (location = 0) in vec3 pos;
@@ -55,6 +50,19 @@ const FRAG_SHADER: &str = r#"#version 330 core
 "#;
 
 fn main() {
+    let xml = fs::read_to_string("scene/abgabeszene.xml").unwrap();
+    let scene = parse_scene(&xml).unwrap();
+    let mut vertices: Vec<f32> = Vec::new();
+    // todo: use flat map
+    for t in scene.triangles {
+        for p in t.p {
+            vertices.push(p.x);
+            vertices.push(-p.y);
+            vertices.push(p.z);
+        }
+    }
+    //vertices.extend([-0.5, -0.5, 0.0, 0.5, -0.5, 0.0, 0.0, 0.5, 0.0].iter().cloned()); // test
+
     let sdl = SDL::init(InitFlags::Everything).expect("couldn't start SDL");
     sdl.gl_set_attribute(SdlGlAttr::MajorVersion, 3).unwrap();
     sdl.gl_set_attribute(SdlGlAttr::MinorVersion, 3).unwrap();
@@ -88,9 +96,10 @@ fn main() {
 
     let vbo = Buffer::new().expect("Couldn't make a VBO");
     vbo.bind(BufferType::Array);
+
     buffer_data(
         BufferType::Array,
-        bytemuck::cast_slice(&VERTICES),
+        bytemuck::cast_slice(&vertices),
         GL_STATIC_DRAW,
     );
 
@@ -117,14 +126,11 @@ fn main() {
                 _ => (),
             }
         }
-        // now the events are clear.
-
-        // here's where we could change the world state if we had some.
 
         // and then draw!
         unsafe {
             glClear(GL_COLOR_BUFFER_BIT);
-            glDrawArrays(GL_TRIANGLES, 0, 3);
+            glDrawArrays(GL_TRIANGLES, 0, (3 * vertices.len()).try_into().unwrap());
         }
         win.swap_window();
     }
