@@ -28,16 +28,19 @@ use core::{
     mem::{size_of, size_of_val},
 };
 use ogl33::*;
+use glam::f32::Mat4;
 
 type Vertex = [f32; 3];
 
 //const VERTICES: [Vertex; 3] = [[-0.5, -0.5, 0.0], [0.5, -0.5, 0.0], [0.0, 0.5, 0.0]];
 
 const VERT_SHADER: &str = r#"#version 330 core
+  uniform mat4 transform;
+
   layout (location = 0) in vec3 pos;
 
   void main() {
-    gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);
+    gl_Position = transform * vec4(pos,1.0);
   }
 "#;
 
@@ -126,10 +129,15 @@ fn main() {
                 _ => (),
             }
         }
-
+        //let time = sdl.get_ticks() as f32 / 2000.0_f32;
+        //let transform = Mat4::from_rotation_z(time);
+        let transform = Mat4::perspective_lh(1.0,16.0/9.0,scene.camera.clippingNear,scene.camera.clippingFar);
         // and then draw!
         unsafe {
             glClear(GL_COLOR_BUFFER_BIT);
+            let transform_name = null_str!("transform").as_ptr().cast();
+            let transform_loc = glGetUniformLocation(shader_program.0, transform_name);
+            glUniformMatrix4fv(transform_loc, 1, GL_FALSE, &transform.to_cols_array()[0]);
             glDrawArrays(GL_TRIANGLES, 0, (3 * vertices.len()).try_into().unwrap());
         }
         win.swap_window();

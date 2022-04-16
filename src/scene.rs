@@ -1,6 +1,7 @@
 use crate::color::Color;
 use crate::material::Material;
 use crate::triangle::Triangle;
+use crate::camera::Camera;
 use std::collections::HashMap;
 
 pub struct Scene {
@@ -21,7 +22,7 @@ pub struct Scene {
 
     int unterteilung; // Unterteilung für das Raumteilungsverfahren
     */
-    //camera: Camera,
+    pub camera: Camera,
     //boundingBox: BoundingBox,
     pub materials: HashMap<String, Material>,
     pub triangles: Vec<Triangle>,

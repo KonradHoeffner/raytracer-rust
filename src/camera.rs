@@ -4,19 +4,19 @@ use glam::f32::Vec3A;
 
 pub struct Camera {
     // Alles was näher an der Kamera ist wird geclippt
-    clippingNear: f32,
+    pub clippingNear: f32,
     // Alles was weiter weg von der Kamera ist wird geclippt
-    clippingFar: f32,
+    pub clippingFar: f32,
     // Winkel in Bogenmaß, der den Sichtwinkel in Y - Richtung angibt. Muss zwischen 0 und pi liegen.
     //fovy: f32,
     // Winkel in Bogenmaß, der den Sichtwinkel in X - Richtung angibt. Muss zwischen 0 und pi liegen.
     //fovx: f32,
     // position of the camera
-    pos: Vec3A,
+    pub pos: Vec3A,
     // Where the camera points to
-    target: Vec3A,
+    pub target: Vec3A,
     // points upward
-    up: Vec3A,
+    pub up: Vec3A,
 }
 
 impl Camera {

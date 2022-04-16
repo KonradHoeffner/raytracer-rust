@@ -171,6 +171,7 @@ pub fn parse_scene(xml: &str) -> Result<Scene, anyhow::Error> {
     let background = parse_color(&childNode!(&beleuchtung, "hintergrundfarbe")?)?;
     let ambient = parse_color(&childNode!(&beleuchtung, "ambientehelligkeit")?)?;
     Ok(Scene {
+        camera,
         materials,
         triangles,
         background,
